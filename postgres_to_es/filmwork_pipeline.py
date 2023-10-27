@@ -7,7 +7,7 @@ from psycopg import ServerCursor
 from config import APP_SETTINGS, BACKOFF_CONFIG, MOVIE_INDEX, STATE_KEY
 from logger import logger
 from models import Movie
-from queries.filmwork import query_film
+from queries.filmwork import QUERY_FILM
 from state import State
 from utils.coroutine import coroutine
 
@@ -23,8 +23,7 @@ def fetch_changed_movies(
         logger.info(
             "Querieng changed movies by several reasons greater than %s", last_updated
         )
-        sql = query_film()
-        cursor.execute(sql, (last_updated,))
+        cursor.execute(QUERY_FILM, (last_updated,))
         while result := cursor.fetchmany(size=APP_SETTINGS.batch_size):
             logger.info("Send %s records to transform step", len(result))
             next_node.send(result)
@@ -55,7 +54,6 @@ def save_movies(
 ) -> Generator[None, Tuple[list[dict], datetime], None]:
     while movies := (yield):
         logger.info("Loading step begun.")
-        print(movies)
         t = time.perf_counter()
         lines, _ = helpers.bulk(
             client=client,

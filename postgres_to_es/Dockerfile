@@ -22,11 +22,13 @@ COPY --chown=django:django requirements.txt .
 COPY --chown=django:django entrypoint.sh .
 COPY --chown=django:django movies.json .
 
-COPY . .
 
 RUN  python -m pip install --upgrade pip \
-     && pip install -r requirements.txt \
+     && pip install -r --no-cache-dir requirements.txt \
      && chmod +x entrypoint.sh
+
+
+COPY . .
 
 
 USER django

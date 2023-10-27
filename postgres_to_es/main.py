@@ -1,4 +1,5 @@
 import time
+from contextlib import closing
 from datetime import datetime
 
 import backoff
@@ -28,12 +29,13 @@ from redis_state_storage import RedisStorage
 def main() -> None:
     postgres_dsn = make_conninfo(**POSTGRES_DSN.model_dump())
     elastic_dsn = f"http://{ELASTIC_DSN.host}:{ELASTIC_DSN.port}"
-    elastic_client = Elasticsearch([elastic_dsn])
     redis_client = Redis(**REDIS_DSN.model_dump())
     state = State(RedisStorage(redis_client, STATE_ROOT))
-    with psycopg.connect(postgres_dsn, row_factory=dict_row) as conn, ServerCursor(
-        conn, "fetcher"
-    ) as cursor:
+    with closing(
+        psycopg.connect(postgres_dsn, row_factory=dict_row)
+    ) as conn, ServerCursor(conn, "fetcher") as cursor, closing(
+        Elasticsearch([elastic_dsn])
+    ) as elastic_client:
         coro = build_filmwork_etl(
             postgres_cursor=cursor, elasticsearch_loader=elastic_client, state=state
         )

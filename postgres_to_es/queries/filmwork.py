@@ -1,8 +1,4 @@
-from typing import Optional
-
-
-def query_film():
-    return f"""
+QUERY_FILM = f"""
     SELECT film.id, film.rating AS imdb_rating, film.title, film.description,
     ARRAY_AGG(DISTINCT genre.name) as genre,
     ARRAY_AGG(DISTINCT person.full_name) FILTER (WHERE person_film.role = 'director') AS director,
